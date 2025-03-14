@@ -1,0 +1,11 @@
+{
+  "dependencies": {
+    "bullmq": "^5.43.0",
+    "class-validator": "^0.14.1",
+    "dotenv": "^16.4.7",
+    "fast-csv": "^5.0.2"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0"
+  }
+}
