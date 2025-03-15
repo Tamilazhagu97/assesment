@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, JoinColumn } from "typeorm";
-import { IsEmail, Length, IsDecimal, Min, Max } from "class-validator";
+import { IsEmail, Length } from "class-validator";
 
 @Entity()
 export class Customer {
