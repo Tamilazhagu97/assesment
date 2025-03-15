@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import multer from "multer";
+import * as multer from "multer";
 import { CsvService } from "../service/csvProcessor";
 
 // Configure multer for file upload
