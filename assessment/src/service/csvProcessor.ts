@@ -6,41 +6,48 @@ import { OrderItem } from "../entity/OrderItem";
 import { Product } from "../entity/Product";
 import { Customer } from "../entity/Customer";
 
-export const processCSV = async (filePath: string) => {
-    const stream = fs.createReadStream(filePath);
-    const csvParser = fastCsv.parse({ headers: true });
-    const connection = await AppDataSource.initialize();
-    
-    stream.pipe(csvParser)
-        .on("data", async (row) => {
-            const customer = await connection.getRepository(Customer).save({
-                name: row["Customer Name"],
-                email: row["Customer Email"],
-                address: row["Customer Address"],
-            });
+export class CsvService {
+    static async processCSV(filePath: string): Promise<void> {
+        const stream = fs.createReadStream(filePath);
+        const csvParser = fastCsv.parse({ headers: true });
+        const connection = await AppDataSource.initialize();
+        
+        stream.pipe(csvParser)
+            .on("data", async (row) => {
+                const customerRepository = connection.getRepository(Customer);
+                const productRepository = connection.getRepository(Product);
+                const orderRepository = connection.getRepository(Order);
+                const orderItemRepository = connection.getRepository(OrderItem);
 
-            const product = await connection.getRepository(Product).save({
-                name: row["Product Name"],
-                category: row["Category"],
-                unitPrice: parseFloat(row["Unit Price"]),
-            });
+                const customer = await customerRepository.save({
+                    name: row["Customer Name"],
+                    email: row["Customer Email"],
+                    address: row["Customer Address"],
+                });
 
-            const order = await connection.getRepository(Order).save({
-                customer,
-                dateOfSale: new Date(row["Date of Sale"]),
-                paymentMethod: row["Payment Method"],
-                shippingCost: parseFloat(row["Shipping Cost"]),
-            });
+                const product = await productRepository.save({
+                    name: row["Product Name"],
+                    category: row["Category"],
+                    unitPrice: parseFloat(row["Unit Price"]),
+                });
 
-            await connection.getRepository(OrderItem).save({
-                order,
-                product,
-                quantitySold: parseInt(row["Quantity Sold"], 10),
-                discount: parseFloat(row["Discount"]),
+                const order = await orderRepository.save({
+                    customer,
+                    dateOfSale: new Date(row["Date of Sale"]),
+                    paymentMethod: row["Payment Method"],
+                    shippingCost: parseFloat(row["Shipping Cost"]),
+                });
+
+                await orderItemRepository.save({
+                    order,
+                    product,
+                    quantitySold: parseInt(row["Quantity Sold"], 10),
+                    discount: parseFloat(row["Discount"]),
+                });
+            })
+            .on("end", () => {
+                console.log("CSV processing complete.");
+                connection.destroy();
             });
-        })
-        .on("end", () => {
-            console.log("CSV processing complete.");
-            connection.destroy();
-        });
-};
+    }
+}
